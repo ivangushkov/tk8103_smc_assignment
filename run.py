@@ -1,22 +1,13 @@
 import numpy as np
 from scipy.integrate import odeint
-import dynamical_systems
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+from time import time
+
+import dynamical_systems
+import controllers
 
 ## Code for sliding mode assignment in TK8103 - Advanced Nonlinear Analysis
-
-def call_dynamics(state, t, dynamical_system, controller, parameters):
-
-    if dynamical_system.name == "nomoto_heading":
-        pass
-    elif dynamical_system.name == "inverted_pendulum":
-        u = 0
-        x_dot = dynamical_system.x_dot(state, parameters, u)
-    else:
-        pass
-    
-    return x_dot
 
 # Pendulum Parameters
 
@@ -26,20 +17,42 @@ k = 0.02
 g = 9.81
 
 delta = np.pi/2
-init_state = [np.pi/3 - delta, 0.0]
+init_state = [0 - delta, 0.0]
+
+# smc parameters
+k_smc = 4
+lam   = 1
 
 # Simulation parameters
 
 animate = True
 
-T = 100
-dt = 0.1
-t = np.linspace(0, T, int(T/dt))
+T = 30
+dt = 0.0001
+N = int(T/dt)
+t = np.linspace(0, T, N+1)
 
-controller = None
+
+controller = controllers.conventional_smc(k_smc, lam)
 dynamical_system = dynamical_systems.inverted_pendulum(m = m, l = l, g = g, k = k)
 
-sol = odeint(call_dynamics, init_state, t, args=(dynamical_system, controller, delta))
+# Allocate arrays for results
+sol = np.zeros((int(T/dt)+1, 2))
+sol[0,:] = init_state
+
+u_vec = np.zeros((N, 1))
+s_vec = np.zeros((N, 1))
+
+for i in range(N):
+
+    u = controller.calculate_u(sol[i], i*dt)
+    s = controller.sliding_surface(sol[i])
+    x_dot = dynamical_system.x_dot(sol[i,:], delta, u)
+    
+    # Store input, sliding variable and steped state
+    u_vec[i] = u
+    s_vec[i] = s
+    sol[i+1, :] = sol[i, :] + x_dot * dt
 
 theta = sol[:,0] + delta
 theta_dot = sol[:,1]
@@ -68,19 +81,48 @@ if animate == True:
 
     def animate(i):
         """Update the animation at frame i."""
-        x, y = get_coords(theta[i])
+        x, y = get_coords(theta[i*100])# *100 due to downsampling of frames
         line.set_data([0, x], [0, y])
         circle.set_center((x, y))
-    nframes = int(T/dt)
-    interval = T
+
+    # downsample the frames by a factor of 100
+    nframes = int(len(theta)/100)
+    interval = dt
+    
     ani = animation.FuncAnimation(fig, animate, frames=nframes, repeat=True,
                               interval=interval)
     plt.show()
 
 
+fig1 = plt.figure(1)
 plt.plot(t, theta, 'b', label='theta(t)')
 plt.plot(t, theta_dot, 'g', label='omega(t)')
+plt.axhline(y = delta, color = 'r', linestyle = '-', label='reference angle')
 plt.legend(loc='best')
 plt.xlabel('t')
 plt.grid()
+
+fig2 = plt.figure(2)
+plt.plot(theta, theta_dot)
+plt.xlabel('angle')
+plt.ylabel('angular velocity')
+plt.title('Trajectory of the system in state-space')
+plt.grid()
+
+fig3 = plt.figure(3)
+plt.plot(t[1::], u_vec)
+plt.xlabel('time')
+plt.ylabel('input torque')
+plt.title('Input')
+plt.grid()
+
+sliding_var_plot_time = 3
+N_sliding_plot_time = int(sliding_var_plot_time/dt)
+fig4 = plt.figure(4)
+plt.plot(t[1:N_sliding_plot_time+1], s_vec[0:N_sliding_plot_time])
+plt.xlabel('time [s]')
+plt.ylabel('sliding variable')
+plt.title('Sliding variable time evolution')
+plt.grid()
+
 plt.show()
