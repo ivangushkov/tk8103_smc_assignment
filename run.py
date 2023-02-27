@@ -16,12 +16,14 @@ l = 1
 k = 0.02
 g = 9.81
 
-delta = np.pi/2
-init_state = [0 - delta, 0.0]
+delta = 3/2*np.pi
+#init_state = [0 - delta, 0.0]
+init_state = [0.0 - delta, 0, 0.0]
 
 # smc parameters
 k_smc = 4
-lam   = 1
+lam   = 2
+eps   = 0.1 # boundary layer thiccness
 
 # Simulation parameters
 
@@ -33,26 +35,32 @@ N = int(T/dt)
 t = np.linspace(0, T, N+1)
 
 
-controller = controllers.conventional_smc(k_smc, lam)
+#controller = controllers.conventional_smc(k_smc, lam, eps) # works
+controller = controllers.integral_smc(k_smc, lam, eps) # works
+
 dynamical_system = dynamical_systems.inverted_pendulum(m = m, l = l, g = g, k = k)
 
 # Allocate arrays for results
-sol = np.zeros((int(T/dt)+1, 2))
+sol = np.zeros((int(T/dt)+1, len(init_state)))
 sol[0,:] = init_state
 
 u_vec = np.zeros((N, 1))
 s_vec = np.zeros((N, 1))
 
+
 for i in range(N):
 
+    #u = controller.continious_smc(sol[i], i*dt)
     u = controller.calculate_u(sol[i], i*dt)
+
     s = controller.sliding_surface(sol[i])
-    x_dot = dynamical_system.x_dot(sol[i,:], delta, u)
-    
+    x_dot = dynamical_system.x_dot_augmented(sol[i,:], delta, u)
+
     # Store input, sliding variable and steped state
     u_vec[i] = u
     s_vec[i] = s
     sol[i+1, :] = sol[i, :] + x_dot * dt
+
 
 theta = sol[:,0] + delta
 theta_dot = sol[:,1]
