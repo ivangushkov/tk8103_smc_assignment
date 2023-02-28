@@ -1,4 +1,4 @@
-# TK8103 Sliding Mode Controll Assignment Code
+# TK8103 Sliding Mode Control Assignment Code
 
 A simple repo for the code handout in the smc assignment in TK8103. Features terrible animation code and monkey forward euler simulation. Don't hate playa it works!
 
