@@ -18,7 +18,7 @@ g = 9.81
 
 delta = np.pi/2
 
-init_state = [0 - delta, 0, 0, 0]
+init_state = [0.1 - delta, 0, 0, 0]
 
 # smc parameters
 k_smc = 4
@@ -35,9 +35,9 @@ dt = 0.0001
 N = int(T/dt)
 t = np.linspace(0, T, N+1)
 
-
-#controller = controllers.conventional_smc(k_smc, lam, eps) # works
-controller = controllers.integral_smc(k_smc, lam, eps) # works
+# TODO Implement controllers
+controller = controllers.conventional_smc(k_smc, lam, eps) # works
+#controller = controllers.integral_smc(k_smc, lam, eps) # works
 
 dynamical_system = dynamical_systems.inverted_pendulum(m, l, g, k, k_u)
 dynamical_system.controller_dynamics = True # for simulating delays due to controller response
@@ -52,10 +52,12 @@ s_vec = np.zeros((N, 1))
 
 for i in range(N):
 
+    # TODO implement controllers
     ####### call controller #######
     # Choose between continious and switching
     #u = controller.calculate_u(sol[i], i*dt)
-    u = controller.continious_smc(sol[i], i*dt)
+    #u = controller.continious_smc(sol[i], i*dt)
+    u = 0
     
 
     s = controller.sliding_surface(sol[i])

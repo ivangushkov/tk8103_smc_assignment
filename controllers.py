@@ -9,24 +9,23 @@ class conventional_smc():
         self.eps = eps
 
     def sliding_surface(self, state):
-        sigma = self.lam * state[0] + state[1]
+        sigma = 0 #TODO implement the sliding surface expression
         return sigma
 
     def calculate_u(self, state, t):
         
         sigma = self.sliding_surface(state)
         
-        return -self.k_smc * np.sign(sigma)
+        return 0 #TODO
 
     def continious_smc(self, state, t):
         # Continious approximation of the sliding mode
-                        
+
         sigma = self.sliding_surface(state)
 
-        if abs(sigma) <= self.eps:
-            return -sigma/self.eps
-        else:
-            return -self.k_smc * np.sign(sigma)
+        #TODO implement the boundary layer input
+
+        return 0
         
 class integral_smc():
 
@@ -37,22 +36,20 @@ class integral_smc():
         self.eps = eps
 
     def sliding_surface(self, state):
-        sigma = (self.lam**2) * state[2] + 2*self.lam * state[0] + state[1]
+        sigma = 0 #TODO implement the sliding surface expression
         return sigma
 
     def calculate_u(self, state, t):
         
         sigma = self.sliding_surface(state)
         
-        return -self.k_smc * np.sign(sigma)
+        return 0 #TODO
 
     def continious_smc(self, state, t):
         # Continious approximation of the sliding mode
 
         sigma = self.sliding_surface(state)
 
-        if abs(sigma) <= self.eps:
-            return -self.k_smc*sigma/self.eps
-        else:
-            return -self.k_smc * np.sign(sigma)
+        #TODO implement the boundary layer input
+        return 0
         
