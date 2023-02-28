@@ -2,14 +2,16 @@ import numpy as np
 
 class inverted_pendulum:
 
-    def __init__(self, m, l, g, k):
+    def __init__(self, m, l, g, k, k_u):
 
-        self.m = m
-        self.l = l
-        self.g = g
-        self.k = k
+        self.m      = m
+        self.l      = l
+        self.g      = g
+        self.k      = k
+        self.k_u    = k_u
 
-        self.name = "inverted_pendulum"
+        self.name                   = "inverted_pendulum"
+        self.controller_dynamics    = False
 
     def x_dot(self, state, delta, u):
         # state = [angle, angular_acc]
@@ -26,9 +28,14 @@ class inverted_pendulum:
 
     def x_dot_augmented(self, state, delta, u):
         # Augments an integral state for the integral smc
-        # state = [angle, angular_acc, int_angle]
-        x_dot_nom = self.x_dot(state, delta, u)
+        # state = [angle, angular_acc, int_angle, controller]
+
+        if self.controller_dynamics:
+            x_dot_nom = self.x_dot(state, delta, state[3])
+        else:    
+            x_dot_nom = self.x_dot(state, delta, u)
 
         int_state = state[0]
+        u_state   = -self.k_u*state[3] + self.k_u*u
 
-        return np.concatenate((x_dot_nom, np.array([int_state])))
+        return np.concatenate((x_dot_nom, np.array([int_state, u_state])))
